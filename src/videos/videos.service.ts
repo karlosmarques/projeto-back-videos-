@@ -20,7 +20,7 @@ export class VideoService {
     private readonly s3: S3Client,
   ) {}
 
-  // 📤 gerar URL de upload
+  
   async generateUploadUrl(fileName: string, contentType: string) {
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -35,7 +35,7 @@ export class VideoService {
     return { url, fileName };
   }
 
-  // 📋 listar vídeos
+  
   async listVideos() {
     const command = new ListObjectsV2Command({
       Bucket: this.bucket,
