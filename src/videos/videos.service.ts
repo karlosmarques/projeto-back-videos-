@@ -50,7 +50,7 @@ export class VideoService {
             Bucket: this.bucket,
             Key: item.Key,
           }),
-          { expiresIn: 60 * 60 }, // 1 hora
+          { expiresIn: 60 * 60 },
         );
 
         return {

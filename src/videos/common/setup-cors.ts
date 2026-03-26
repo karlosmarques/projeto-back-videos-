@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import axios from 'axios';
 import { S3Client, PutBucketCorsCommand } from '@aws-sdk/client-s3';
 import * as dotenv from 'dotenv';
@@ -22,10 +23,12 @@ async function setupCors() {
   const bucketsResponse = await axios.post(
     `${apiUrl}/b2api/v2/b2_list_buckets`,
     { accountId, bucketName: process.env.B2_BUCKET_NAME },
-    { headers: { Authorization: authorizationToken } }
+    { headers: { Authorization: authorizationToken } },
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   const bucket = bucketsResponse.data.buckets[0];
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   console.log(`✅ Bucket encontrado: ${bucket.bucketId}`);
 
   // 3. Remover regras CORS nativas (array vazio)
@@ -33,10 +36,11 @@ async function setupCors() {
     `${apiUrl}/b2api/v2/b2_update_bucket`,
     {
       accountId,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       bucketId: bucket.bucketId,
       corsRules: [], // ← limpa as regras nativas
     },
-    { headers: { Authorization: authorizationToken } }
+    { headers: { Authorization: authorizationToken } },
   );
   console.log('✅ Regras nativas removidas!');
 
@@ -51,20 +55,22 @@ async function setupCors() {
     forcePathStyle: true,
   });
 
-  await s3.send(new PutBucketCorsCommand({
-    Bucket: process.env.B2_BUCKET_NAME!,
-    CORSConfiguration: {
-      CORSRules: [
-        {
-          AllowedOrigins: ['http://localhost:5173'],
-          AllowedMethods: ['PUT', 'GET'],
-          AllowedHeaders: ['*'],
-          ExposeHeaders: ['ETag'],
-          MaxAgeSeconds: 3600,
-        },
-      ],
-    },
-  }));
+  await s3.send(
+    new PutBucketCorsCommand({
+      Bucket: process.env.B2_BUCKET_NAME!,
+      CORSConfiguration: {
+        CORSRules: [
+          {
+            AllowedOrigins: ['http://localhost:5173'],
+            AllowedMethods: ['PUT', 'GET'],
+            AllowedHeaders: ['*'],
+            ExposeHeaders: ['ETag'],
+            MaxAgeSeconds: 3600,
+          },
+        ],
+      },
+    }),
+  );
 
   console.log('✅ CORS S3 configurado com sucesso!');
 }

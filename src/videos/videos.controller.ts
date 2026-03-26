@@ -19,7 +19,6 @@ export class VideoController {
     );
   }
 
- 
   @Get()
   list() {
     return this.videoService.listVideos();
