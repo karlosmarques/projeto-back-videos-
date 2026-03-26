@@ -7,6 +7,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   S3Client,
   PutObjectCommand,
+  GetObjectCommand,
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -20,7 +21,6 @@ export class VideoService {
     private readonly s3: S3Client,
   ) {}
 
-  
   async generateUploadUrl(fileName: string, contentType: string) {
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -35,7 +35,6 @@ export class VideoService {
     return { url, fileName };
   }
 
-  
   async listVideos() {
     const command = new ListObjectsV2Command({
       Bucket: this.bucket,
@@ -43,9 +42,24 @@ export class VideoService {
 
     const response = await this.s3.send(command);
 
-    return response.Contents?.map((item) => ({
-      name: item.Key,
-      url: `https://f000.backblazeb2.com/file/${this.bucket}/${item.Key}`,
-    }));
+    const videos = await Promise.all(
+      (response.Contents ?? []).map(async (item) => {
+        const signedUrl = await getSignedUrl(
+          this.s3,
+          new GetObjectCommand({
+            Bucket: this.bucket,
+            Key: item.Key,
+          }),
+          { expiresIn: 60 * 60 }, // 1 hora
+        );
+
+        return {
+          name: item.Key,
+          url: signedUrl,
+        };
+      }),
+    );
+
+    return videos;
   }
 }
